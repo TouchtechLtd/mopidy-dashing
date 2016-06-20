@@ -51,15 +51,28 @@ class DashingFrontend(pykka.ThreadingActor, core.CoreListener):
         for artist in tl_track.track.artists:
             artists.append(artist.name)         
         
-        message = json.dumps({ 
-            "auth_token": self.auth_token,
-            "title" : "Currently playing",
-            "song": tl_track.track.name,
-            "details": "%s - %s" % ("/".join(artists), tl_track.track.album.name)
-        })
+        try:
+            message = json.dumps({ 
+                "auth_token": self.auth_token,
+                "title" : "Currently playing",
+                "song": tl_track.track.name,
+                "details": "%s - %s" % ("/".join(artists), tl_track.track.album.name)
+            })
 
-        logger.info(message)
-        self.send(message)
+            logger.info(message)
+            self.send(message)
+        except AttributeError:
+            logger.info("No track details to send")
+
+            message = json.dumps({ 
+                "auth_token": self.auth_token,
+                "title" : "Currently playing",
+                "song": "Unknown track",
+                "details": ""
+            })
+
+            logger.info(message)
+            self.send(message)
 
     def track_playback_ended(self, tl_track, time_position):
         sleep(1)
